@@ -4,11 +4,11 @@
 #include <fstream>
 
 
-const int rowCol = 30;                                         // 30x30 2D Binary Martix
+const int rowCol = 30;
 std::array<std::array<bool, rowCol>, rowCol> Matrix();
 void display(std::array<std::array<bool, rowCol>, rowCol>& matrix);
 void checkPos(std::array<std::array<bool, rowCol>, rowCol>& matrix, std::vector<std::vector<int>>& pos);
-void checkCell(std::array<std::array<bool, rowCol>, rowCol> matrix, int& counter, int i, int j, bool toCheck);
+void checkCell(std::array<std::array<bool, rowCol>, rowCol>& matrix, int& counter, int i, int j);
 void update(std::array<std::array<bool, rowCol>, rowCol>& matrix, std::vector<std::vector<int>>& pos);
 
 
@@ -16,28 +16,28 @@ void update(std::array<std::array<bool, rowCol>, rowCol>& matrix, std::vector<st
 int main()
 {					  
 	int gen;
-	std::vector<std::vector<int>> pos = {};     // to store (i, j) position of cells that fullfull the conditions of the game
+	std::vector<std::vector<int>> pos = {};
 	
 	auto matrix = Matrix();
 	
 	std::cout << "No of Generations: ";
-	std::cin >> gen;                     // no of iterations basically
+	std::cin >> gen;
 	
-	display(matrix);                               
-	                              
-	for (int x = 0; x <= gen; x++) {                                 // Main Loop \\
-		system("cls");                      // clear console 
+	display(matrix);
+	
+	for (int x = 0; x <= gen; x++) {                             // MAIN LOOP 
+		system("cls");                  
 		std::cout << "Current Generation: " << x << "\n\n";
-		display(matrix);                     // display the current matrix
-		checkPos(matrix, pos);              //  check each cell (alive or dead) and apply the conditions of the game and if they are satisfied,
-		update(matrix, pos);                // store that (i,j) value to update the matrix at end of each iteration
+		display(matrix);
+		checkPos(matrix, pos);
+		update(matrix, pos);
 	}
 	return 0;
 }
 
 
-std::array<std::array<bool, rowCol>, rowCol> Matrix() {       // get Matrix from a .txt file 
-	std::array<std::array<bool, rowCol>, rowCol> matrix;
+std::array<std::array<bool, rowCol>, rowCol> Matrix() {             // 30x30 boolean matrix with initial pattern from .txt file
+	std::array<std::array<bool, rowCol>, rowCol> matrix;       
 
 	std::string file;
     std::cout << "Enter file name: ";
@@ -53,91 +53,69 @@ std::array<std::array<bool, rowCol>, rowCol> Matrix() {       // get Matrix from
 }
 
 
-void display(std::array<std::array<bool, rowCol>, rowCol>& matrix) {   // display the matrix on the console
+void display(std::array<std::array<bool, rowCol>, rowCol>& matrix) {    // display matrix on console
 	int population = 0;
 	for (int i = 0; i < rowCol; i++) {
         for (int j = 0; j < rowCol; j++) {
         	if (matrix[i][j] == 0)
-            	std::cout << '.' << ' ';            // dead cell = 0 = '.'
+            	std::cout << '.' << ' ';               // dead cell = 0 = '.'
             else {
-            	std::cout << 'o' << ' ';           // alive cell = 1 = 'o'
+            	std::cout << 'o' << ' ';               // alive cell = 1 = 'o'
             	population++;
             }
 		}
         std::cout << '\n';
     }
-    std::cout << '\n';                                                
-    std::cout << "Current Population: " << population << '\n';            // current no of alive cells
+    std::cout << '\n';
+    std::cout << "Current Population: " << population << '\n';  
 }
 
 
 void checkPos(std::array<std::array<bool, rowCol>, rowCol>& matrix, std::vector<std::vector<int>>& pos) {
-	pos = {};
-	int counter = 0;                                                        
-	for (int i = 0; i < rowCol; i++) {                  // loop through each cell
-		for (int j = 0; j < rowCol; j++) {                   
-			if (matrix[i][j] == 1) {                         // if cell is alive then check conditions and if fullfilled, store position    
-				checkCell(matrix, counter, i, j, 1);
-				if (counter < 2 || counter > 3) {
-					pos.push_back({i, j});
-				}
-				counter = 0;
-			}
-			else {
-				checkCell(matrix, counter, i, j, 1);          // same with each dead cell
-				if (counter == 3) {
-					pos.push_back({i, j});
-				}
-				counter = 0;
-			}
-		}
-	}
+    pos.clear();
+    int counter = 0;
+
+    for (int i = 0; i < rowCol; i++) {                // go through each cell
+        for (int j = 0; j < rowCol; j++) {
+            counter = 0;                              // neighbour count reset each gen
+            checkCell(matrix, counter, i, j);         // check each cell and count alive neighbours
+            
+            if (matrix[i][j] == 1) {                 // alive cell
+                if (counter < 2 || counter > 3) {    // conditions for alive cell -> dead
+                    pos.push_back({i, j});                      // if fullfilled, save position for update()
+                }
+            } else {                                  // dead cell
+                if (counter == 3) {                   // condition for dead cell -> alive
+                    pos.push_back({i, j});
+                }
+            }
+        }
+    }
 }
 
-                                             // checking all possible neighbors of a cell
-void checkCell(std::array<std::array<bool, rowCol>, rowCol> matrix, int& counter, int i, int j, bool toCheck) {
-	
-    if (i - 1 >= 0 && matrix[i - 1][j] == toCheck) 
-        counter++;
-        
-    if (i + 1 < rowCol && matrix[i + 1][j] == toCheck)
-        counter++;
-        
-    if (j - 1 >= 0 && matrix[i][j - 1] == toCheck)
-        counter++;
-        
-    if (j + 1 < rowCol && matrix[i][j + 1] == toCheck) 
-        counter++;
-        
-    if (i - 1 >= 0 && j + 1 < rowCol && matrix[i - 1][j + 1] == toCheck) 
-        counter++;
-    
-    if (i - 1 >= 0 && j - 1 >= 0 && matrix[i - 1][j - 1] == toCheck)
-        counter++;
-        
-    if (i + 1 < rowCol && j + 1 < rowCol && matrix[i + 1][j + 1] == toCheck) 
-        counter++;
-    
-    if (i + 1 < rowCol && j - 1 >= 0 && matrix[i + 1][j - 1] == toCheck) 
-        counter++;            
+
+void checkCell(std::array<std::array<bool, rowCol>, rowCol>& matrix, int& counter, int i, int j) {
+    int top = (i - 1 + rowCol) % rowCol;          // wrap-around boundry
+    int bottom = (i + 1) % rowCol;
+    int left = (j - 1 + rowCol) % rowCol;
+    int right = (j + 1) % rowCol;
+
+    if (matrix[top][j] == 1) counter++;              // neighbour count in every direaction of current cell, even corner ones
+    if (matrix[bottom][j] == 1) counter++;
+    if (matrix[i][left] == 1) counter++;
+    if (matrix[i][right] == 1) counter++;
+    if (matrix[top][left] == 1) counter++;
+    if (matrix[top][right] == 1) counter++;
+    if (matrix[bottom][left] == 1) counter++;
+    if (matrix[bottom][right] == 1) counter++;
 }
 
-                                                 // to update the alive to dead or vice versa
+
 void update(std::array<std::array<bool, rowCol>, rowCol>& matrix, std::vector<std::vector<int>>& pos) {
-	for (const auto& position : pos) {
+	for (const auto& position : pos) {   // go through all saved positions to change 
 		int i = position[0];
     	int j = position[1];
-		if (matrix[i][j] == 1)
-			matrix[i][j] = 0;
-		else
-			matrix[i][j] = 1;
+    	
+		matrix[i][j] = !matrix[i][j];  // dead(0) -> alive(1) or vice versa
 	}
 }
-
-
-
-
-
-
-
-
